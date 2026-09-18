@@ -5,7 +5,8 @@ export const criticalAssetPaths = [
   'loading/window.svg', 'loading/window close.svg', 'loading/moon.svg',
   ...['shunshi', 'sanshan', 'yugeng', 'eat', 'muse'].map(id => `loading/${id}-island.svg`),
   'hero/window-open.svg', 'hero/window-night.svg', 'hero/moon.svg',
-  'hero/island.svg', 'hero/hero-text-ideas.svg', 'hero/hero-text-experiences.svg',
+  // Island and typography are ?raw imports rendered as inline paths; the
+  // application module already contains them, so no duplicate image fetch.
 ];
 
 // Failure/timeout releases the mask using the existing artwork's fallback
