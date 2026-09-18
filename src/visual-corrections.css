@@ -1,0 +1,149 @@
+/* Iteration 01: reference-led corrections, using the original artwork. */
+
+/* Loading hands an OPEN window and the moon to the same Hero coordinates. */
+.loading-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+.loading-center p { position: absolute; top: 100%; left: -50%; width: 200%; }
+.loading-moon { z-index: 1; animation: none; }
+.loading-frame { z-index: 2; }
+.loading-screen.is-night .loading-center p { opacity: 0; }
+.loading-screen.is-leaving { opacity: 1; transition: none; }
+
+/* Hero1 → Hero2-1 → Hero2-2 → window / water → exploration space. */
+.hero { --intro-size: min(11.2vw, 18vh); min-height: 650px; }
+.hero h1 { top: 5%; left: 2.5%; font-size: var(--intro-size); line-height: 1; opacity: 0; white-space: nowrap; }
+.hero h1 .title-caret { opacity: 0; }
+.hero-statement { inset: 29% 2.5% auto; margin: 0; font-size: var(--intro-size); line-height: 1.17; font-weight: 750; letter-spacing: -.035em; text-align: center; color: var(--paper); opacity: 0; pointer-events: none; z-index: 2; }
+.hero-statement span { color: inherit; }
+.statement-line { display: block; white-space: nowrap; }
+.melting-letter { display: inline-block; transform-origin: 50% 85%; }
+.statement-caret { display: inline-block; width: 0; font-weight: 400; }
+.hero-world { inset: 0; pointer-events: none; }
+.hero-window { width: 142px; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 4; pointer-events: auto; }
+.hero-window img { transition: none; }
+.hero-window:hover img, .hero-window:focus-visible img { transform: none; }
+.hero-moon { width: 51px; left: calc(50% + 10px); top: calc(50% + 20px); transform: translate(-50%, -50%); opacity: 1; z-index: 3; pointer-events: auto; }
+.hero-island { inset: 16% 7% 5%; width: 86%; height: 79%; opacity: 0; transform: translateY(32%) scale(.025, .05); transform-origin: 50% 82%; }
+.hero-caption { position: absolute; bottom: 4%; left: 2.8%; right: 2.8%; display: flex; justify-content: space-between; font-size: clamp(11px, 1.2vw, 21px); letter-spacing: .02em; opacity: 0; }
+.hero-final-note { position: absolute; right: 2.5%; top: 3%; margin: 0; font-size: clamp(13px, 1.45vw, 28px); line-height: 1.8; text-align: right; opacity: 0; }
+.hero-final-note span { color: var(--coral); }
+.hero-flow { opacity: 0; }
+.is-ready .hero-statement { animation: hero-text-presence 9s both; }
+.hero.is-ready h1 { animation: hero-name 6s both; }
+.is-ready .title-caret { animation: caret-blink 1s 5s step-end infinite; }
+.is-ready .statement-caret { animation: caret-blink 1s step-end infinite; }
+.is-ready .melting-letter { animation: letter-melt 3.7s calc(5s + var(--delay)) cubic-bezier(.4, 0, .3, 1) both; }
+.is-ready .hero-window { animation: window-journey 11s both; }
+.is-ready .hero-moon { animation: moon-exit 2s both; }
+.is-ready .hero-island { animation: water-unfold 4.5s 7.7s both; }
+.is-ready .hero-caption { animation: caption-presence 10s both; }
+.is-ready .hero-final-note, .is-ready .hero-flow { animation: final-presence 1s 11s both; }
+@keyframes hero-text-presence { 0%, 10% { opacity: 0; } 30%, 92% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes hero-name { 0% { opacity: 0; } 26%, 73% { opacity: 1; font-size: var(--intro-size); } 100% { opacity: 1; font-size: 7.2vw; } }
+@keyframes caret-blink { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@keyframes letter-melt {
+  0% { opacity: 1; transform: none; filter: blur(0); }
+  36% { opacity: 1; transform: translate(calc(var(--drift) * .18), calc(var(--fall) * .7)) rotate(var(--tilt)) scale(.95, 1.2); filter: blur(.4px); }
+  65% { opacity: 1; transform: translate(calc(var(--drift) * .55), var(--fall)) rotate(calc(var(--tilt) * -.5)) scale(.8, 1.4); filter: blur(1.2px); }
+  87% { opacity: .8; transform: translate(var(--drift), calc(var(--fall) + 4vh)) scale(.2, .55); filter: blur(3px); }
+  100% { opacity: 0; transform: translate(var(--drift), calc(var(--fall) + 6vh)) scale(.04, .1); filter: blur(3px); }
+}
+@keyframes window-journey { 0%, 9% { top: 50%; width: 142px; } 22%, 74% { top: 83%; width: min(10vw, 21vh); } 100% { top: 56%; width: min(14vw, 30vh); } }
+@keyframes moon-exit { 0%, 12% { left: calc(50% + 10px); top: calc(50% + 20px); width: 51px; } 100% { left: 64%; top: 25%; width: min(6.4vw, 12vh); } }
+@keyframes water-unfold { 0% { opacity: 0; transform: translateY(32%) scale(.025, .05); } 20% { opacity: 1; transform: translateY(29%) scale(.12, .09); } 50% { opacity: 1; transform: translateY(10%) scale(.4, .2); } 100% { opacity: 1; transform: translateY(0) scale(1); } }
+@keyframes caption-presence { 0%, 10% { opacity: 0; } 25%, 90% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes final-presence { from { opacity: 0; } to { opacity: 1; } }
+
+/* The dark window backing stays INSIDE the unmodified SVG silhouette. */
+.home-window { background: transparent; isolation: isolate; }
+.home-window::before { content: ''; position: absolute; inset: 3px; background: var(--ink); z-index: -1; }
+
+/* One continuous decorative island crosses the About / Work boundary. */
+.about { overflow: visible; z-index: 1; }
+.about-island { bottom: -100px; width: 36%; z-index: 1; pointer-events: none; }
+.project-exploration { padding: 120px 7% 100px 22%; overflow: visible; }
+.project-island { min-height: clamp(280px, 43vh, 440px); padding: 0; scroll-margin-top: 180px; }
+.island-composition { position: relative; display: grid; grid-template-columns: 1fr 1fr; align-items: center; gap: 26px; width: min(100%, 760px); transform: scale(var(--proximity, 1)); transform-origin: right center; }
+.project-copy { width: 100%; max-width: none; text-align: right; pointer-events: none; color: #b6b4aa; }
+.project-description { font-size: 15px; line-height: 2; }
+.island-art { width: 100%; height: 270px; pointer-events: none; }
+.island-art img { width: 100%; height: 100%; }
+.island-art .island-mockup { inset: 0; width: 100%; height: 100%; padding: 0 24%; opacity: 0; object-fit: contain; transform: translateY(8px); transition: opacity .35s, transform .35s; z-index: 1; }
+.island-art .island-mockup.is-web { padding: 14% 4%; }
+.island-default { opacity: .17; }
+.island-hover { opacity: 0; }
+/* Only this small bridge between text and artwork activates a project. */
+.island-button { position: absolute; left: calc(50% - 2px); top: 50%; transform: translateY(-50%); width: 100px; height: 150px; min-height: 0; padding: 0; display: grid; place-items: center; z-index: 3; }
+.project-cursor { position: relative; inset: auto; width: 85px; max-height: 70px; opacity: 0; pointer-events: none; }
+.project-cursor.is-visible { opacity: 1; }
+.is-revealed .island-default { opacity: 0; }
+.is-revealed .island-hover, .is-revealed .island-mockup { opacity: 1; }
+.is-revealed .island-art { transform: scale(1.06); }
+.is-revealed .island-mockup { transform: none; }
+.is-revealed .project-copy { color: var(--ink); }
+.is-revealed .project-description { opacity: 1; max-height: 210px; transform: none; }
+.project-1 .island-composition { margin-right: 9%; }
+.project-2 .island-composition { margin-right: 16%; }
+.project-3 .island-composition { margin-right: -1%; }
+.project-4 .island-composition { margin-right: 13%; }
+.project-5 .island-composition { margin-right: 4%; }
+.project-6 .island-composition { margin-right: 15%; }
+
+/* A curved curtain reveals from the right; the content does not squash. */
+.project-sidebar { background: transparent; overflow: hidden; animation: none; width: min(78vw, 1400px); }
+.project-sidebar::backdrop { background: rgb(36 36 36 / .07); }
+.curtain-mask { position: absolute; }
+.curtain-surface { position: absolute; inset: 0; background: #f8f6e9; clip-path: url(#curtain-edge); transform-origin: right center; animation: curtain-unfold .85s cubic-bezier(.22, .75, .22, 1) both; pointer-events: none; }
+.sidebar-scroll { position: relative; height: 100%; overflow-y: auto; overscroll-behavior: contain; animation: curtain-content .85s both; }
+.sidebar-close { margin-left: 11%; }
+.sidebar-content { padding-left: 18%; }
+.is-closing .curtain-surface { animation: curtain-fold .65s cubic-bezier(.55, 0, .8, .4) both; }
+.is-closing .sidebar-scroll { animation: curtain-content-out .3s both; pointer-events: none; }
+@keyframes curtain-unfold { 0% { transform: scaleX(0); } 65% { transform: scaleX(.95); } 100% { transform: scaleX(1); } }
+@keyframes curtain-fold { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+@keyframes curtain-content { 0%, 35% { opacity: 0; clip-path: inset(0 0 0 100%); } 100% { opacity: 1; clip-path: inset(0); } }
+@keyframes curtain-content-out { from { opacity: 1; } to { opacity: 0; } }
+
+@media (max-width: 900px) {
+  .island-composition { gap: 18px; }
+  .island-art { height: 220px; }
+  .project-sidebar { width: 88vw; }
+}
+@media (max-width: 600px) {
+  .hero { --intro-size: 10.9vw; min-height: 620px; }
+  .hero h1 { top: 15%; left: 4%; }
+  .hero-statement { inset: 35% 3% auto; line-height: 1.4; }
+  .hero-island { inset: 34% -12% 12%; width: 124%; height: 54%; }
+  .hero-caption { bottom: 16%; font-size: 9px; gap: 30px; }
+  .hero-caption span:last-child { max-width: 50%; text-align: right; }
+  .hero-final-note { top: 24%; right: 5%; font-size: 11px; }
+  .hero-window { min-width: 100px; }
+  .hero-moon { min-width: 35px; }
+  .about-island { width: 65%; bottom: -30px; }
+  .project-exploration { padding: 100px 24px 40px; }
+  .project-island { min-height: 360px; scroll-margin-top: 110px; }
+  .project-island .island-composition { width: 100%; margin: 0; grid-template-columns: 1fr; gap: 15px; transform: none; }
+  .island-art { grid-row: 1; width: 65%; height: 180px; justify-self: center; }
+  .project-copy { max-width: none; text-align: center; }
+  .island-button { left: calc(50% - 48px); top: 155px; width: 96px; height: 90px; }
+  .project-cursor { display: none; }
+  .project-sidebar { width: 100%; }
+  .sidebar-content { padding: 15px 7% 45px 12%; }
+  .sidebar-close { margin-left: 10%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hero h1 { opacity: 1; font-size: 7.2vw; }
+  .hero-statement { opacity: 0; }
+  .hero-window { top: 56%; width: min(14vw, 30vh); }
+  .hero-island { opacity: 1; transform: none; }
+  .hero-moon { left: 64%; top: 25%; }
+  .hero-final-note, .hero-flow { opacity: 1; }
+}
+
+.experiment-group { margin-top: 54px; }
+.experiment-group h3 { font-size: 22px; font-weight: 500; margin: 0 0 24px; }
+.project-video { display: block; width: 100%; height: auto; margin: 0 0 28px; background: transparent; }
+.case-study-images .project-image { margin-bottom: 28px; }
+.project-image { width: 100%; max-width: none; height: auto; max-height: none; object-fit: contain; background: transparent; }
+.project-video { width: auto; max-width: 100%; max-height: calc(100vh - 180px); margin-left: auto; margin-right: auto; object-fit: contain; }
+.project-video.project-video-image-width { width: 100%; height: auto; max-height: none; object-fit: contain; }
+.case-study-images, .experiment-group { width: 100%; }

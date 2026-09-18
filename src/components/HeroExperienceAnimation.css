@@ -1,0 +1,35 @@
+/* Scoped to Hero; other sections keep their existing styles. */
+.hero.experience-host { min-height: 650px; }
+.hero-experience-animation { position: relative; width: 100%; height: 100%; overflow: hidden; }
+.hero.experience-host h1 { animation: none; opacity: 1; position: absolute; top: 5%; left: 2.5%; margin: 0; line-height: 1; letter-spacing: -.045em; color: var(--paper); clip-path: inset(0 100% 0 0); z-index: 2; pointer-events: none; }
+.hero.experience-host h1 span { opacity: 1; }
+.experience-name-caret, .experience-svg-caret { visibility: hidden; }
+.experience-scene { position: absolute; inset: 0; display: block; width: 100%; height: 100%; overflow: visible; }
+.experience-svg-caret, .experience-name-caret { animation: experience-caret 1.1s step-end infinite; }
+.experience-end-notes { visibility: hidden; }
+.experience-end-notes p { position: absolute; top: 3%; right: 2.5%; margin: 0; text-align: right; font-size: clamp(13px, 1.45vw, 28px); line-height: 1.8; }
+.experience-end-notes a { position: absolute; bottom: 3%; left: 2.5%; line-height: 1.6; font-size: clamp(13px, 1.4vw, 25px); }
+.experience-end-notes span { color: var(--coral); }
+@keyframes experience-caret { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+@media (max-width: 600px) { .hero.experience-host { min-height: 620px; } .experience-end-notes a { bottom: 85px; } }
+@media (prefers-reduced-motion: reduce) { .experience-svg-caret, .experience-name-caret { animation: none; } }
+
+/* A single persistent window crosses the paper transition. */
+.experience-window-scene { position: fixed; top: 0; left: 0; width: 100%; height: 100svh; overflow: visible; z-index: 12; pointer-events: none; visibility: hidden; }
+#about { z-index: 3; background: var(--paper); will-change: transform, clip-path; }
+.before-work .side-navigation { visibility: hidden; pointer-events: none; }
+.before-work .home-window { visibility: hidden; pointer-events: none; }
+.about-moon-copy { position: absolute; inset: 0; background: #000; color: var(--paper); pointer-events: none; visibility: hidden; clip-path: circle(var(--moon-radius, 45px) at var(--moon-x, 0px) var(--moon-y, 0px)); }
+.about-copy.moon-hover .about-moon-copy { visibility: visible; }
+
+.experience-transition-backdrop { position: fixed; inset: 0; background: var(--ink); pointer-events: none; z-index: 0; }
+.experience-scene { z-index: 1; }
+.experience-end-notes { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.experience-end-notes a { pointer-events: auto; }
+.about-copy::before { content: ''; position: absolute; width: calc(var(--moon-radius, 45px) * 2); height: calc(var(--moon-radius, 45px) * 2); border-radius: 50%; background: #000; left: var(--moon-x, 0px); top: var(--moon-y, 0px); transform: translate(-50%, -50%); visibility: hidden; pointer-events: none; }
+.about-copy.moon-hover::before { visibility: visible; }
+.about-moon-copy { background: transparent; }
+.about .about-copy h2, .about .about-copy p { width: fit-content; margin-left: auto; }
+
+.experience-window-return { cursor: pointer; pointer-events: none; }
+.experience-window-return:focus-visible { outline: 2px solid var(--paper); outline-offset: 4px; }
