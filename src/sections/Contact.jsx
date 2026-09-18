@@ -67,12 +67,13 @@ export default function Contact() {
         .to(icon, { rotation: 0, x: 5, y: 0, duration: .13, ease: 'sine.out' });
       wobbleTweens.set(icon, tween);
     }
-    icons.forEach(icon => icon.addEventListener('pointerenter', enter));
+    function mobileIconLoaded() { if (innerWidth <= 768) measure(); }
+    icons.forEach(icon => { icon.addEventListener('pointerenter', enter); icon.addEventListener('load', mobileIconLoaded); });
     const resize = new ResizeObserver(measure); resize.observe(stage);
     window.addEventListener('scroll', draw, { passive: true });
     window.addEventListener('section-progress', draw);
     measure();
-    return () => { resize.disconnect(); window.removeEventListener('scroll', draw); window.removeEventListener('section-progress', draw); icons.forEach(icon => { icon.removeEventListener('pointerenter', enter); wobbleTweens.get(icon)?.kill(); }); };
+    return () => { resize.disconnect(); window.removeEventListener('scroll', draw); window.removeEventListener('section-progress', draw); icons.forEach(icon => { icon.removeEventListener('pointerenter', enter); icon.removeEventListener('load', mobileIconLoaded); wobbleTweens.get(icon)?.kill(); }); };
   }, []);
   return <section ref={root} id="contact" data-observe className="contact" aria-labelledby="contact-title">
     <div className="contact-stage">

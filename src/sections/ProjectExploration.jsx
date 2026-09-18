@@ -27,11 +27,21 @@ export default function ProjectExploration({ onOpen }) {
       svg.dataset.progress = value;
     }
     function measure() {
+      const mobile = innerWidth <= 768;
       const box = section.getBoundingClientRect();
       const boxes = rows.map(row => {
         const composition = row.querySelector('.island-composition');
         const r = composition.getBoundingClientRect();
         const center = r.top + r.height / 2 - box.top;
+        if (mobile) {
+          const art = row.querySelector('.island-art').getBoundingClientRect();
+          const copy = row.querySelector('.project-copy').getBoundingClientRect();
+          // Reserve active art size even for a currently smaller inactive preview.
+          const activeHeight = art.height / (row.classList.contains('is-centered') ? 1 : .7);
+          return { left: r.left - box.left, right: r.right - box.left,
+            top: Math.min(art.bottom - activeHeight, copy.top) - box.top,
+            bottom: Math.max(art.bottom, copy.bottom) - box.top };
+        }
         return { left: r.right - box.left - composition.offsetWidth, right: r.right - box.left,
           top: center - composition.offsetHeight / 2, bottom: center + composition.offsetHeight / 2 };
       });
@@ -46,12 +56,17 @@ export default function ProjectExploration({ onOpen }) {
         const startY = a.bottom + padding, endY = b.top - padding;
         const gap = endY - startY;
         if (gap < 0) return; // Never manufacture space or overlap existing content.
-        let count = rawGap < 220 ? 3 : rawGap < 360 ? 4 : rawGap < 520 ? 5 : rawGap < 700 ? 6 : rawGap < 900 ? 7 : 8;
-        const left = Math.max(box.width * .4, Math.min(a.left, b.left));
-        const right = Math.min(box.width - 24, Math.max(a.right, b.right));
+        let count = mobile ? (rawGap < 260 ? 3 : rawGap < 420 ? 4 : 5) : rawGap < 220 ? 3 : rawGap < 360 ? 4 : rawGap < 520 ? 5 : rawGap < 700 ? 6 : rawGap < 900 ? 7 : 8;
+        const mobileCenter = ((a.left + a.right) / 2 + (b.left + b.right) / 2) / 2;
+        const mobileDrift = Math.min(24, box.width * .055);
+        const left = mobile ? mobileCenter - mobileDrift : Math.max(box.width * .4, Math.min(a.left, b.left));
+        const right = mobile ? mobileCenter + mobileDrift : Math.min(box.width - 24, Math.max(a.right, b.right));
+        const routePoints = mobile ? points.map((point, i) => ({ ...point,
+          x: (segment % 2 === 0 ? [.85, .65, .1, .25] : [.25, .1, .65, .85])[i],
+        })) : points;
         const path = document.createElementNS(ns, 'path');
         const x = point => left + (right - left) * point.x;
-        path.setAttribute('d', `M ${x(points[0])} ${startY} C ${x(points[1])} ${startY + gap / 3}, ${x(points[2])} ${startY + gap * 2 / 3}, ${x(points[3])} ${endY}`);
+        path.setAttribute('d', `M ${x(routePoints[0])} ${startY} C ${x(routePoints[1])} ${startY + gap / 3}, ${x(routePoints[2])} ${startY + gap * 2 / 3}, ${x(routePoints[3])} ${endY}`);
         const length = path.getTotalLength();
         // Leave at least a graphic's width plus clear air between samples.
         while (count > 3 && length / (count - 1) < 34) count--;

@@ -10,18 +10,53 @@ export default function ProjectSidebar({ project, onClose }) {
   const [closing, setClosing] = useState(false);
   const closeTimer = useRef(null);
   const playbackAllowed = useRef(true);
+  const closeAction = useRef(null);
   function requestClose() {
     if (closing) return;
     playbackAllowed.current = false;
     if (project.id === 'shunshi') dialog.current.querySelectorAll('video').forEach(video => video.pause());
     setClosing(true);
-    closeTimer.current = setTimeout(onClose, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 650);
+    closeTimer.current = setTimeout(onClose, matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : matchMedia('(max-width: 768px)').matches ? 300 : 650);
   }
+  closeAction.current = requestClose;
+  useEffect(() => {
+    const element = dialog.current;
+    const mobile = matchMedia('(max-width: 768px)');
+    let start = null;
+    function begin(event) {
+      const touch = event.touches[0];
+      start = mobile.matches && event.touches.length === 1 && touch.clientX <= 28 ? { x: touch.clientX, y: touch.clientY } : null;
+    }
+    function move(event) {
+      if (!start || !mobile.matches) return;
+      if (event.touches.length !== 1) { start = null; return; }
+      const dx = event.touches[0].clientX - start.x, dy = event.touches[0].clientY - start.y;
+      if (Math.abs(dy) > 12 && Math.abs(dy) >= Math.abs(dx)) { start = null; return; }
+      if (dx > 12 && dx > Math.abs(dy) && event.cancelable) event.preventDefault();
+    }
+    function end(event) {
+      if (!start || !mobile.matches) { start = null; return; }
+      const touch = event.changedTouches[0];
+      const dx = touch.clientX - start.x, dy = touch.clientY - start.y;
+      start = null;
+      if (dx >= 75 && dx > Math.abs(dy)) closeAction.current();
+    }
+    function cancel() { start = null; }
+    element.addEventListener('touchstart', begin, { passive: true });
+    element.addEventListener('touchmove', move, { passive: false });
+    element.addEventListener('touchend', end);
+    element.addEventListener('touchcancel', cancel);
+    return () => {
+      element.removeEventListener('touchstart', begin); element.removeEventListener('touchmove', move);
+      element.removeEventListener('touchend', end); element.removeEventListener('touchcancel', cancel);
+    };
+  }, []);
   useEffect(() => {
     const element = dialog.current;
     const previous = document.activeElement;
     const overflow = document.body.style.overflow;
     element.showModal();
+    if (matchMedia('(max-width: 768px)').matches) element.querySelector('.sidebar-mobile-collapse').focus({ preventScroll: true });
     playbackAllowed.current = true;
     const videos = project.id === 'shunshi' ? [...element.querySelectorAll('video')] : [];
     let disposed = false;
@@ -49,6 +84,7 @@ export default function ProjectSidebar({ project, onClose }) {
   return <dialog ref={dialog} className={`project-sidebar ${closing ? 'is-closing' : ''}`} aria-labelledby="sidebar-title" onCancel={event => { event.preventDefault(); requestClose(); }} onClick={event => { if (event.target === event.currentTarget) { const rect = event.currentTarget.getBoundingClientRect(); if (event.clientX < rect.left || event.clientX > rect.right) requestClose(); } }}>
     <svg className="curtain-mask" width="0" height="0" aria-hidden="true"><defs><clipPath id="curtain-edge" clipPathUnits="objectBoundingBox"><path d="M .015 0 C -.015 .2,.065 .43,.085 .61 C .095 .66,.01 .88,.015 1 L 1 1 L 1 0 Z" /></clipPath></defs></svg>
     <div className="curtain-surface" aria-hidden="true" />
+    <button className="sidebar-mobile-collapse" aria-label="收起项目详情" onClick={requestClose}>‹</button>
     <div className="sidebar-scroll">
     <button className="sidebar-close" onClick={requestClose} aria-label="关闭项目详情" autoFocus>×</button>
     <div className="sidebar-content">

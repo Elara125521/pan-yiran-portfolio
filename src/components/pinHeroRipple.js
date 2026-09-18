@@ -37,25 +37,30 @@ export default function pinHeroRipple(scene) {
   }
   const observer = new MutationObserver(protect);
   observer.observe(scene, { attributes: true, attributeFilter: ['style'] });
+  function prepare(next) {
+    const key = `${next.w}:${next.h}`;
+    if (key === imageKey) return;
+    const canvas = document.createElement('canvas'); canvas.width = next.w + 40; canvas.height = next.h + 40;
+    const ctx = canvas.getContext('2d'); ctx.fillStyle = 'white'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+    // Only rasterize the small protected footprint and its feathered collar.
+    const left = Math.max(0, Math.floor(next.x - 52 + 20)), top = Math.max(0, Math.floor(next.y - 52 + 20));
+    const width = Math.min(canvas.width - left, Math.ceil(next.width + 106));
+    const height = Math.min(canvas.height - top, Math.ceil(next.height + 106));
+    const pixels = ctx.createImageData(width, height);
+    for (let y = 0; y < height; y++) for (let x = 0; x < width; x++) {
+      const px = x + left - 20, py = y + top - 20;
+      const dx = Math.max(next.x - 10 - px, 0, px - next.x - next.width - 10);
+      const dy = Math.max(next.y - 10 - py, 0, py - next.y - next.height - 10);
+      const t = Math.min(1, Math.hypot(dx, dy) / 42), i = (y * width + x) * 4;
+      pixels.data[i] = pixels.data[i + 1] = pixels.data[i + 2] = 255;
+      pixels.data[i + 3] = Math.round(255 * t * t * (3 - 2 * t));
+    }
+    ctx.putImageData(pixels, left, top); image = canvas.toDataURL(); imageKey = key;
+  }
   return {
+    prepare,
     update(next) {
-      // The final footprint is static. Motion immediately bypasses protection;
-      // no mask images, geometry or filter nodes are regenerated during travel.
-      if (next.active) {
-        const key = `${next.w}:${next.h}`;
-        if (key !== imageKey) {
-          const canvas = document.createElement('canvas'); canvas.width = next.w + 40; canvas.height = next.h + 40;
-          const ctx = canvas.getContext('2d'), pixels = ctx.createImageData(canvas.width, canvas.height);
-          for (let y = 0; y < canvas.height; y++) for (let x = 0; x < canvas.width; x++) {
-            const dx = Math.max(next.x - 10 - (x - 20), 0, (x - 20) - next.x - next.width - 10);
-            const dy = Math.max(next.y - 10 - (y - 20), 0, (y - 20) - next.y - next.height - 10);
-            const t = Math.min(1, Math.hypot(dx, dy) / 42), i = (y * canvas.width + x) * 4;
-            pixels.data[i] = pixels.data[i + 1] = pixels.data[i + 2] = 255;
-            pixels.data[i + 3] = Math.round(255 * t * t * (3 - 2 * t));
-          }
-          ctx.putImageData(pixels, 0, 0); image = canvas.toDataURL(); imageKey = key;
-        }
-      }
+      // Image preparation belongs to initialization/resize, never completion.
       const changed = geometry?.active !== next.active || geometry?.w !== next.w || geometry?.h !== next.h;
       geometry = next;
       if (changed) { lastStyle = ''; protect(); }

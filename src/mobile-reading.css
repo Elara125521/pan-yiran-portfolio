@@ -1,0 +1,70 @@
+/* New controls have no desktop footprint. All existing overrides are mobile-only. */
+.sidebar-mobile-collapse { display: none; }
+
+@media (max-width: 768px) {
+  #about .about-introduction {
+    font-size: clamp(15px, 3.85vw, 16.5px);
+    letter-spacing: -.015em;
+    max-width: calc(100vw - 48px);
+  }
+  #projects .island-art { scale: .75; }
+  #projects .project-description {
+    font-size: 12px;
+    line-height: 1.9;
+    max-width: 30ch;
+    margin-inline: auto;
+  }
+  #projects .project-category { font-size: 15px; line-height: 2; }
+  #projects .exploration-path { display: none; }
+
+  .project-sidebar {
+    inset: 0;
+    width: 100vw;
+    max-width: none;
+    height: 100dvh;
+    max-height: 100dvh;
+    background: #f8f6e9;
+    animation: mobile-reading-enter .3s cubic-bezier(.22, .75, .22, 1) both;
+  }
+  .project-sidebar .curtain-surface, .project-sidebar .curtain-mask,
+  .project-sidebar .sidebar-close { display: none; }
+  .project-sidebar .sidebar-scroll { animation: none; }
+  .project-sidebar.is-closing { animation: mobile-reading-exit .3s cubic-bezier(.4, 0, .6, 1) both; }
+  .project-sidebar.is-closing .sidebar-scroll { animation: none; pointer-events: none; }
+  .project-sidebar .sidebar-mobile-collapse {
+    display: grid;
+    place-items: center start;
+    position: fixed;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 5;
+    width: 44px;
+    height: 64px;
+    padding: 0 0 3px 5px;
+    background: transparent;
+    font-size: 28px;
+    line-height: 1;
+    color: var(--ink);
+  }
+  .sidebar-mobile-collapse::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 11px;
+    width: 23px;
+    height: 42px;
+    border-radius: 0 10px 10px 0;
+    background: #edeade;
+    z-index: -1;
+  }
+  .sidebar-mobile-collapse:focus-visible { outline: 2px solid var(--ink); outline-offset: -3px; }
+  @keyframes mobile-reading-enter { from { transform: translateX(100%); } to { transform: translateX(0); } }
+  @keyframes mobile-reading-exit { from { transform: translateX(0); } to { transform: translateX(100%); } }
+}
+@media (max-width: 389px) { #projects .island-art { scale: .72; } }
+@media (min-width: 412px) and (max-width: 768px) { #projects .island-art { scale: .78; } }
+@media (min-width: 601px) and (max-width: 768px) { #projects .island-art { scale: .8; } }
+@media (max-width: 768px) and (prefers-reduced-motion: reduce) {
+  .project-sidebar, .project-sidebar.is-closing { animation: none; }
+}

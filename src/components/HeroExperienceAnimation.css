@@ -1,4 +1,7 @@
 /* Scoped to Hero; other sections keep their existing styles. */
+@media (max-width: 768px) {
+  .loading-screen .loading-window { width: calc(142px * .72); height: calc(189px * .72); }
+}
 .hero.experience-host { min-height: 650px; }
 .hero-experience-animation { position: relative; width: 100%; height: 100%; overflow: hidden; }
 .hero.experience-host h1 { animation: none; opacity: 1; position: absolute; top: 5%; left: 2.5%; margin: 0; line-height: 1; letter-spacing: -.045em; color: var(--paper); clip-path: inset(0 100% 0 0); z-index: 2; pointer-events: none; }
@@ -7,7 +10,7 @@
 .experience-scene { position: absolute; inset: 0; display: block; width: 100%; height: 100%; overflow: visible; }
 .experience-svg-caret, .experience-name-caret { animation: experience-caret 1.1s step-end infinite; }
 .experience-end-notes { visibility: hidden; }
-.experience-end-notes p { position: absolute; top: 3%; right: 2.5%; margin: 0; text-align: right; font-size: clamp(13px, 1.45vw, 28px); line-height: 1.8; }
+.experience-end-notes p { position: absolute; top: 5%; right: 2.5%; margin: 0; text-align: right; font-size: clamp(13px, 1.45vw, 28px); line-height: 1.8; }
 .experience-end-notes a { position: absolute; bottom: 3%; left: 2.5%; line-height: 1.6; font-size: clamp(13px, 1.4vw, 25px); }
 .experience-end-notes span { color: var(--coral); }
 @keyframes experience-caret { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }

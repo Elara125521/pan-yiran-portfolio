@@ -3,6 +3,8 @@ import { gsap } from 'gsap';
 import { asset } from '../data/assets';
 import ideasSource from '../../assets/hero/hero-text-ideas.svg?raw';
 import experiencesSource from '../../assets/hero/hero-text-experiences.svg?raw';
+import mobileIntoSource from '../../assets/hero/Hero-mobile-text-into.svg?raw';
+import mobileExperiencesSource from '../../assets/hero/Hero-mobile-text-experience.svg?raw';
 import islandSource from '../../assets/hero/island.svg?raw';
 import { svgPaths, sampleContours, bounds, curve, clamp, mix, smooth, waterSurface } from './heroLiquidGeometry';
 import './HeroExperienceAnimation.css';
@@ -12,6 +14,7 @@ const ideas = svgPaths(ideasSource);
 const experiences = svgPaths(experiencesSource);
 // The first path in the provided EXPERIENCES artwork is the vertical caret.
 const textPaths = [...ideas.map(d => ({ d, row: 0 })), ...experiences.slice(1).map(d => ({ d, row: 1 }))];
+const mobileTextPaths = [...ideas.map(d => ({ d, row: 0 })), ...svgPaths(mobileIntoSource).map(d => ({ d, row: 1 })), ...svgPaths(mobileExperiencesSource).map(d => ({ d, row: 2 }))];
 const islands = svgPaths(islandSource);
 // Exact apertures from window-open.svg, reused as the container boundary.
 const aperture = 'M19.0176 162.92H93.8867C97.5604 145.248 122.081 130.971 122.157 130.927C122.103 130.901 82.6992 112.057 80.0898 79.875H19.0176Z M19.0176 55.1523H122.982V25.3574H19.0176Z';
@@ -32,7 +35,9 @@ export default function HeroExperienceAnimation({ ready, handoff }) {
     const pinnedRipple = pinHeroRipple(svg);
     const windowSvg = element.querySelector('.experience-window-scene');
     const about = document.getElementById('about');
-    const glyphElements = [...element.querySelectorAll('.liquid-glyph')];
+    let glyphElements = [], glyphs = [], textMode = null;
+    let mobileIntoGroup = null, mobileIntoBounds = null, lastIntoX = null;
+    const glyphCache = new Map();
     const islandElements = [...element.querySelectorAll('.flow-island')];
     const outflowGroup = element.querySelector('.experience-outflow');
     const islandExclusion = element.querySelector('.island-window-exclusion');
@@ -58,7 +63,6 @@ export default function HeroExperienceAnimation({ ready, handoff }) {
     const revealRect = element.querySelector('.type-reveal');
     const notes = element.querySelector('.experience-end-notes');
     const noteBlocks = [...notes.children];
-    const glyphs = textPaths.map(item => { const contours = sampleContours(item.d); return { ...item, contours, box: bounds(contours) }; });
     const islandContours = islands.map(d => sampleContours(d, 210));
     const state = { position: 0, reveal: 0, soften: 0, flow: 0, fill: 0, expand: 0, escape: 0, outflow: 0, nameSize: 0, notes: 0, final: 0 };
     const size = { width: 1440, height: 900 };
@@ -69,7 +73,7 @@ export default function HeroExperienceAnimation({ ready, handoff }) {
     let blackLatched = false, blackCoverage = 0;
     let lastHeroTime = 0;
     let islandWindowDeparting = false;
-    let protectedGainSize = '', protectedFilterState = '';
+    let protectedFilterState = '', settledIslandSize = '';
     let scrollTween, floatTween;
     let returning = false, holdIntro = false, docked = false;
     const float = { y: 0 };
@@ -80,11 +84,20 @@ export default function HeroExperienceAnimation({ ready, handoff }) {
       const s = Math.min(w * .95 / 1290, h * .42 / 364);
       const textX = w / 2 - 675 * s;
       const experienceY = h * .53;
-      const smallWidth = Math.min(Math.max(w * .10, 72), h * .22);
-      const finalWidth = Math.min(Math.max(w * .14, 112), h * .31);
+      const mobileWindow = innerWidth <= 768;
+      const smallWidth = Math.min(Math.max(w * .10, 72), h * .22) * (mobileWindow ? .58 : 1);
+      const finalWidth = Math.min(Math.max(w * .14, 112), h * .31) * (mobileWindow ? .62 : 1);
+      const mobileTextScale = (w - 48) / 1131;
+      const mobileIntoY = h * .48;
+      const mobileIntoX = mobileWindow && mobileIntoBounds ? 24 - mobileIntoBounds.minX * mobileTextScale : 0;
+      if (mobileIntoGroup && mobileIntoX !== lastIntoX) {
+        lastIntoX = mobileIntoX;
+        mobileIntoGroup.setAttribute('transform', `translate(${mobileIntoX} 0)`);
+      }
+      const smallHeight = smallWidth * 189 / 142;
       // One parent transform binds the frame, water and moon throughout expansion.
       const windowScale = mix(mix(start.scale, smallWidth / 142, state.position), finalWidth / 142, state.expand);
-      const smallCenterY = experienceY + 269 * s;
+      const smallCenterY = mobileWindow ? mobileIntoY + 124 * mobileTextScale + 24 + smallHeight / 2 : experienceY + 269 * s;
       const centerY = mix(mix(start.y ?? h / 2, smallCenterY, state.position), h * .55, state.expand);
       const centerX = mix(mix(start.x ?? w / 2, textX + 675 * s, state.position), w / 2, state.expand);
       const wx = centerX - 71 * windowScale, wy = centerY - 94.5 * windowScale;
@@ -154,11 +167,11 @@ export default function HeroExperienceAnimation({ ready, handoff }) {
       blackCoverage = !blackLatched ? 0 : reversingHero ? heroReveal : Math.max(blackCoverage, inContent ? 1 : heroReveal);
       nightFrame.setAttribute('visibility', blackLatched ? 'visible' : 'hidden');
       nightReveal.setAttribute('height', 189 * blackCoverage);
-      const protectedSeam = blackLatched && blackCoverage > 0 && state.outflow === 1 && !islandWindowDeparting && scroll < 1;
+      const protectedSeam = blackLatched && blackCoverage > 0 && state.outflow > 0 && !islandWindowDeparting && scroll < 1;
       const protectionState = `${w}:${h}:${protectedSeam}`;
       if (protectionState !== protectedFilterState) {
         protectedFilterState = protectionState;
-        pinnedRipple.update({ x: movingX, y: movingY + scroll, width: 142 * movingScale, height: 189 * movingScale * blackCoverage, w, h, active: protectedSeam });
+        pinnedRipple.update({ w, h, active: protectedSeam });
       }
       if (scroll >= h) return; // Offscreen Hero glyph/island geometry need not be rebuilt on content scroll.
       // Reveal all three blocks together, rather than a top-to-bottom wipe.
@@ -175,11 +188,13 @@ export default function HeroExperienceAnimation({ ready, handoff }) {
       glyphs.forEach((glyph, index) => {
         if (state.flow === 1 && state.fill === 1) return; // Already submerged beneath the contained water.
         const path = glyphElements[index];
-        const tx = glyph.row === 0 ? (w - 1086 * s) / 2 : textX + 1;
-        const ty = glyph.row === 0 ? h * .315 : experienceY;
+        const glyphScale = mobileWindow && glyph.row > 0 ? mobileTextScale : s;
+        const tx = glyph.row === 0 ? (w - 1086 * s) / 2 : mobileWindow ? glyph.row === 1 ? mobileIntoX : 24 : textX + 1;
+        const wrapperX = mobileWindow && glyph.row === 1 ? mobileIntoX : 0;
+        const ty = glyph.row === 0 ? h * .315 : mobileWindow ? glyph.row === 1 ? mobileIntoY : smallCenterY + smallHeight / 2 + 24 : experienceY;
         if (state.soften === 0 && state.flow === 0) {
           path.setAttribute('d', glyph.d);
-          path.setAttribute('transform', `translate(${tx} ${ty}) scale(${s})`);
+          path.setAttribute('transform', `translate(${tx - wrapperX} ${ty}) scale(${glyphScale})`);
           return;
         }
         path.removeAttribute('transform');
@@ -189,38 +204,31 @@ export default function HeroExperienceAnimation({ ready, handoff }) {
         path.setAttribute('d', glyph.contours.map((contour, ci) => curve(contour.map((point, pi) => {
           const lower = clamp((point.y - box.minY) / Math.max(1, box.maxY - box.minY));
           const stretch = Math.pow(lower, 2.7) * state.soften * (24 + 30 * (.5 + .5 * Math.sin(index * 2.7)));
-          const originalX = tx + point.x * s + Math.sin(point.y * .035 + time * .45) * lower * state.soften * 4;
-          const originalY = ty + (point.y + stretch) * s;
+          const originalX = tx + point.x * glyphScale + Math.sin(point.y * .035 + time * .45) * lower * state.soften * 4;
+          const originalY = ty + (point.y + stretch) * glyphScale;
           const angle = pi / contour.length * Math.PI * 2;
           const radius = ci === 0 ? (7 + (index % 4) * 2) * windowScale : (1 - flow) * 2;
           const dropletX = inlet.x + Math.cos(angle) * radius;
           const dropletY = inlet.y + Math.sin(angle) * radius * 1.2;
           const shapeBlend = flow * flow;
-          const glyphCenterX = tx + (box.minX + box.maxX) * s / 2;
-          const glyphCenterY = ty + (box.minY + box.maxY) * s / 2;
-          const liquidRadius = ci === 0 ? Math.max(8, (box.maxX - box.minX) * s * .32) : (1 - shapeBlend) * 2;
+          const glyphCenterX = tx + (box.minX + box.maxX) * glyphScale / 2;
+          const glyphCenterY = ty + (box.minY + box.maxY) * glyphScale / 2;
+          const liquidRadius = ci === 0 ? Math.max(8, (box.maxX - box.minX) * glyphScale * .32) : (1 - shapeBlend) * 2;
           const liquidX = glyphCenterX + Math.cos(angle) * liquidRadius;
-          const liquidY = glyphCenterY + Math.sin(angle) * (box.maxY - box.minY) * s * .6;
+          const liquidY = glyphCenterY + Math.sin(angle) * (box.maxY - box.minY) * glyphScale * .6;
           const softenedX = mix(originalX, liquidX, shapeBlend);
           const softenedY = mix(originalY, liquidY, shapeBlend);
           const bend = Math.sin(flow * Math.PI) * Math.sin(index * 1.9) * w * .035;
-          return { x: mix(softenedX, dropletX, flow) + bend, y: mix(softenedY, dropletY, flow) };
+          return { x: mix(softenedX, dropletX, flow) + bend - wrapperX, y: mix(softenedY, dropletY, flow) };
         }))).join(' '));
       });
 
       const islandScale = Math.min(w * .86 / 1227, h * .79 / 701);
       const ix = (w - 1227 * islandScale) / 2, iy = h * .55 - 701 * islandScale / 2;
       const outlet = { x: wx + 138 * windowScale, y: wy + 135 * windowScale };
-      if (protectedSeam && protectedGainSize !== `${w}:${h}`) {
-        protectedGainSize = `${w}:${h}`;
-        islandContours.forEach(contours => contours.forEach(contour => contour.forEach(point => {
-          const tx = ix + point.x * islandScale, ty = iy + point.y * islandScale;
-          const distance = Math.hypot(Math.max(movingX - 10 - tx, 0, tx - (movingX + 142 * movingScale + 10)),
-            Math.max(movingY + scroll - 10 - ty, 0, ty - (movingY + scroll + 189 * movingScale * blackCoverage + 10)));
-          point.protectedGain = smooth(distance / 42);
-        })));
-      }
-      islandContours.forEach((contours, index) => {
+      const islandSize = `${w}:${h}`;
+      if (state.outflow < 1) settledIslandSize = '';
+      if (settledIslandSize !== islandSize) islandContours.forEach((contours, index) => {
         const path = islandElements[index];
         path.setAttribute('visibility', flowingOut ? 'visible' : 'hidden');
         if (!flowingOut) return;
@@ -230,13 +238,15 @@ export default function HeroExperienceAnimation({ ready, handoff }) {
           const arrival = smooth((state.outflow - distance * .2) / (1 - distance * .2));
           const angle = pi / contour.length * Math.PI * 2;
           const ripple = Math.sin(angle * 3 + time * .31) * (3 + 14 * Math.sin(arrival * Math.PI));
-          // Pin the existing contour motion as well as the pointer filter.
-          // Formation remains unchanged; only the completed, covered seam is fixed.
-          const motionGain = protectedSeam ? point.protectedGain : 1;
+          // The formation ripple reaches zero within the original reveal.
+          // The exact same geometry is then retained; pointer displacement is
+          // supplied separately by the existing, protected mouse filter.
+          const motionGain = 1 - smooth((arrival - .85) / .15);
           return { x: mix(outlet.x + Math.cos(angle) * 9, tx, arrival) + Math.sin(angle * 2 + time * .25) * 3 * arrival * motionGain,
             y: mix(outlet.y + Math.sin(angle) * 5, ty, arrival) + ripple * arrival * motionGain };
         }))).join(' '));
       });
+      if (state.outflow === 1) settledIslandSize = islandSize;
       name.style.fontSize = `${mix(Math.min(w * .112, h * .18), w * .072, state.nameSize)}px`;
       name.style.clipPath = 'none';
       name.style.opacity = state.reveal;
@@ -249,8 +259,32 @@ export default function HeroExperienceAnimation({ ready, handoff }) {
       element.dataset.fill = state.fill.toFixed(3);
     }
     function measure() {
+      const mobile = innerWidth <= 768;
+      if (textMode !== mobile) {
+        textMode = mobile;
+        if (!glyphCache.has(mobile)) glyphCache.set(mobile, (mobile ? mobileTextPaths : textPaths).map(item => {
+          const contours = sampleContours(item.d); return { ...item, contours, box: bounds(contours) };
+        }));
+        glyphs = glyphCache.get(mobile);
+        const fragment = document.createDocumentFragment();
+        mobileIntoGroup = mobile ? document.createElementNS('http://www.w3.org/2000/svg', 'g') : null;
+        mobileIntoBounds = mobile ? { minX: Math.min(...glyphs.filter(glyph => glyph.row === 1).map(glyph => glyph.box.minX)), maxX: Math.max(...glyphs.filter(glyph => glyph.row === 1).map(glyph => glyph.box.maxX)) } : null;
+        lastIntoX = null;
+        if (mobileIntoGroup) { mobileIntoGroup.setAttribute('class', 'mobile-into-position'); fragment.append(mobileIntoGroup); }
+        glyphElements = glyphs.map(glyph => {
+          const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+          path.setAttribute('class', 'liquid-glyph'); path.setAttribute('d', glyph.d);
+          path.setAttribute('data-text-row', glyph.row);
+          (mobile && glyph.row === 1 ? mobileIntoGroup : fragment).append(path); return path;
+        });
+        textGroup.replaceChildren(fragment);
+      }
       const rect = element.getBoundingClientRect();
       size.width = rect.width; size.height = rect.height;
+      const finalWidth = Math.min(Math.max(rect.width * .14, 112), rect.height * .31) * (mobile ? .62 : 1);
+      const finalHeight = finalWidth * 189 / 142;
+      pinnedRipple.prepare({ x: (rect.width - finalWidth) / 2, y: rect.height * .55 - finalHeight / 2,
+        width: finalWidth, height: finalHeight, w: rect.width, h: rect.height });
       svg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
       windowSvg.setAttribute('viewBox', `0 0 ${rect.width} ${rect.height}`);
       windowSvg.style.height = `${rect.height}px`;

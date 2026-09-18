@@ -3,7 +3,7 @@ import { asset } from '../data/assets';
 import usePinnedDecoration from '../components/usePinnedDecoration';
 
 function AboutText() {
-  return <><h2>ABOUT ME</h2><p>潘依然</p><p>中国成都的产品设计师</p><p>我通过交互、文化与新兴技术探索数字体验<br />让想法流动并逐渐成形</p><p className="about-skills">UI/UX 设计 · 交互设计 · 视觉设计</p></>;
+  return <><h2>ABOUT ME</h2><p>潘依然</p><p>中国成都的产品设计师</p><p className="about-introduction">我通过交互、文化与新兴技术探索数字体验<br />让想法流动并逐渐成形</p><p className="about-skills">UI/UX 设计 · 交互设计 · 视觉设计</p></>;
 }
 
 export default function About() {

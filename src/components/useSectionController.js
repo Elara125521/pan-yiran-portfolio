@@ -1,9 +1,11 @@
-import { useEffect } from 'react';
+import { useLayoutEffect } from 'react';
 import { gsap } from 'gsap';
 
 // The only owner of document scroll position. Visual components only observe it.
 export default function useSectionController(ready, onActive) {
-  useEffect(() => {
+  // Initialize the existing controller before the loading handoff is painted.
+  // A passive effect permits one frame at the browser's previous scroll position.
+  useLayoutEffect(() => {
     if (!ready) return;
     const stops = [...document.querySelectorAll('#hero, #about, .project-island, #contact')];
     const reduced = matchMedia('(prefers-reduced-motion: reduce)');
